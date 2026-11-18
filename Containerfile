@@ -22,7 +22,7 @@
 
 ARG PYTHON_VERSION=3.14
 ARG DEBIAN_BASE=trixie
-FROM python:3.14-slim-trixie AS base
+FROM python:3.15-slim-trixie AS base
 
 # ADD --chmod gives the directories it creates the mode of the file, which would lock the frappe user out.
 RUN mkdir -p /templates/nginx /etc/nginx/snippets
