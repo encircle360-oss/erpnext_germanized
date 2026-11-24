@@ -243,8 +243,8 @@ done
 # packages the SCSS of the apps imports, such as Bootstrap; the build stage keeps them for this.
 step "Website Theme: a custom theme compiles and nginx serves it"
 theme=$(bench_output --site "$SITE" execute frappe.client.insert \
-	--args '[{"doctype": "Website Theme", "theme": "Site Test", "custom": 1, "primary_color": "#1f6feb"}]') ||
-	fail "saving a Website Theme raised an error"
+	--args '[{"doctype": "Website Theme", "theme": "Site Test", "custom": 1, "primary_color": "#1f6feb"}]' 2>&1) ||
+	fail "saving a Website Theme raised an error: $theme"
 theme_url=$(tail -n 1 <<<"$theme" | jq -r '.theme_url // empty')
 [[ "$theme_url" == /files/website_theme/*.css ]] || fail "the Website Theme has no compiled stylesheet: $theme"
 content_type=$("${compose[@]}" exec -T frontend curl -fsS -o /dev/null -w '%{content_type}' \
