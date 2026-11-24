@@ -240,14 +240,17 @@ for library in "${libraries[@]}"; do
 done
 
 # Saving a Website Theme compiles its SCSS with node generate_bootstrap_theme.js, which needs sass and the
-# packages the SCSS of the apps imports, such as Bootstrap; the build stage keeps them for this.
+# packages the SCSS of the apps imports, such as Bootstrap; the build stage keeps them for this. The custom SCSS
+# uses $primary, a variable of Bootstrap, so the stylesheet only compiles when the import of Bootstrap works.
 step "Website Theme: a custom theme compiles and nginx serves it"
+# shellcheck disable=SC2016 # $primary is SCSS, not a shell variable
 theme=$(bench_output --site "$SITE" execute frappe.client.insert \
-	--args '[{"doctype": "Website Theme", "theme": "Site Test", "custom": 1, "primary_color": "#1f6feb"}]' 2>&1) ||
+	--args '[{"doctype": "Website Theme", "theme": "Site Test", "custom": 1,
+		"custom_scss": ".site-test { color: $primary; }"}]' 2>&1) ||
 	fail "saving a Website Theme raised an error: $theme"
 theme_url=$(tail -n 1 <<<"$theme" | jq -r '.theme_url // empty')
 [[ "$theme_url" == /files/website_theme/*.css ]] || fail "the Website Theme has no compiled stylesheet: $theme"
-content_type=$("${compose[@]}" exec -T frontend curl -fsS -o /dev/null -w '%{content_type}' \
-	-H "Host: $SITE" "http://localhost:8080$theme_url") || fail "nginx does not serve $theme_url"
-[[ "$content_type" == text/css* ]] || fail "nginx serves $theme_url as $content_type"
-echo "nginx serves $theme_url as $content_type"
+stylesheet=$("${compose[@]}" exec -T frontend curl -fsS -H "Host: $SITE" "http://localhost:8080$theme_url") ||
+	fail "nginx does not serve $theme_url"
+[[ "$stylesheet" == *".site-test{color:"* ]] || fail "the stylesheet $theme_url lacks the rule of the custom SCSS"
+echo "nginx serves $theme_url with the custom SCSS compiled against Bootstrap"
