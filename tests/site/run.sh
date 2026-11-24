@@ -195,6 +195,21 @@ handshake=$(wait_for socketio "http://localhost:9000/socket.io/?EIO=4&transport=
 echo "$handshake"
 [[ "$handshake" == '0{"sid":'* ]] || fail "Socket.IO answered the handshake with $handshake"
 
+# Socket.IO loads <app>/realtime/handlers.js only for an authenticated connection, inside a try/catch that merely
+# warns, so a handler that lost a package would fail silently; loading each one directly fails loudly instead.
+step "socketio: the realtime handlers of every app load"
+# shellcheck disable=SC2016 # expanded by the shell inside the container
+docker run --rm --quiet --entrypoint sh --workdir /home/frappe/frappe-bench/apps "$image" -c '
+	found=0
+	for handlers in */realtime/handlers.js; do
+		[ -f "$handlers" ] || continue
+		found=1
+		node -e "require(process.argv[1])" "$PWD/$handlers" || exit 1
+		echo "$handlers loads"
+	done
+	[ "$found" = 1 ] || echo "no app has realtime handlers"
+' || fail "the realtime handlers of an app do not load"
+
 step "frontend: nginx in front of the backend"
 "${compose[@]}" up --detach --no-deps frontend
 pong=$(wait_for frontend http://localhost:8080/api/method/ping -H "Host: $SITE")
@@ -212,8 +227,10 @@ echo "nginx passes /socket.io/ to Socket.IO"
 # The desk loads some libraries at run time from node_modules, such as qz-tray for printing; the build stage
 # keeps exactly those, so every such path in the built bundles has to answer.
 step "frontend: the libraries the browser loads from node_modules"
+# The character class leaves out the quotes, backticks, $, { and } of template literals, which name no file.
+# shellcheck disable=SC2016 # $ is a literal character of the pattern
 mapfile -t libraries < <("${compose[@]}" exec -T frontend sh -c \
-	'grep -rhoE "/?assets/[a-z0-9_]+/node_modules/[^\"'"'"' )]+\.(js|css)" /home/frappe/frappe-bench/assets/*/dist' |
+	'grep -rhoE "/?assets/[a-z0-9_]+/node_modules/[^\"'"'"' )\`\${},]+\.(js|css)" /home/frappe/frappe-bench/assets/*/dist' |
 	sed 's#^/*#/#' | sort -u)
 [[ ${#libraries[@]} -gt 0 ]] || fail "the built bundles name no library under node_modules; the search has gone stale"
 for library in "${libraries[@]}"; do
@@ -221,3 +238,16 @@ for library in "${libraries[@]}"; do
 		fail "nginx does not serve $library"
 	echo "nginx serves $library"
 done
+
+# Saving a Website Theme compiles its SCSS with node generate_bootstrap_theme.js, which needs sass and the
+# packages the SCSS of the apps imports, such as Bootstrap; the build stage keeps them for this.
+step "Website Theme: a custom theme compiles and nginx serves it"
+theme=$(bench_output --site "$SITE" execute frappe.client.insert \
+	--args '[{"doctype": "Website Theme", "theme": "Site Test", "custom": 1, "primary_color": "#1f6feb"}]') ||
+	fail "saving a Website Theme raised an error"
+theme_url=$(tail -n 1 <<<"$theme" | jq -r '.theme_url // empty')
+[[ "$theme_url" == /files/website_theme/*.css ]] || fail "the Website Theme has no compiled stylesheet: $theme"
+content_type=$("${compose[@]}" exec -T frontend curl -fsS -o /dev/null -w '%{content_type}' \
+	-H "Host: $SITE" "http://localhost:8080$theme_url") || fail "nginx does not serve $theme_url"
+[[ "$content_type" == text/css* ]] || fail "nginx serves $theme_url as $content_type"
+echo "nginx serves $theme_url as $content_type"

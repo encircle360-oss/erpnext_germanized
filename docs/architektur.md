@@ -86,16 +86,20 @@ eu_einvoice wandelt ein PDF in PDF/A-3 um, bevor es die XML einer ZUGFeRD-Rechnu
 Der zweite `RUN` der Stufe `builder` ruft deshalb `python -m germanized prune-node-modules` auf (`germanized/node_modules.py`). Die Werkzeuge kommen über einen Bind-Mount in den Build und landen nicht im Image. Behalten wird, was nach dem Build noch geladen wird, jeweils mit allen Paketen, von denen es abhängt:
 
 - **Socket.IO:** die Pakete, die `apps/frappe/socketio.js` und alles, was es über relative Pfade lädt, mit `require` oder `import` einbinden, dazu die des Verzeichnisses `realtime` jeder App, aus dem der Server `<app>/realtime/handlers.js` lädt. Heute sind das `socket.io`, `@redis/client` und `cookie`.
+- **Website Themes:** Speichert jemand ein Website Theme, übersetzt Frappe dessen SCSS mit `node generate_bootstrap_theme.js`. Behalten werden deshalb die Pakete, die dieses Skript über relative Pfade lädt (`sass`, dazu `fast-glob` und `chalk` aus `esbuild/utils.js`), und jedes Paket, das die SCSS-Dateien unter `<app>/<app>/public` mit `@import`, `@use` oder `@forward` einbinden, etwa `bootstrap`.
 - **Bibliotheken für den Browser:** jedes Paket, das die gebauten Assets oder die Quellen einer App als `assets/<app>/node_modules/<paket>` nennen, etwa `qz-tray` und `js-sha256` für den Direktdruck, `html5-qrcode` für den Scanner, `frappe-gantt`, `photoswipe`, `ace-builds` und `occt-import-js` für 3D-Modelle in ERPNext.
 
-Alles andere fällt weg: die `node_modules` der Oberflächen in den Apps ganz, aus dem `node_modules` jeder App alle übrigen Pakete und `.bin`. Links namens `node_modules`, die danach ins Leere zeigen, etwa `sites/assets/hrms/node_modules`, entfernt der Schritt ebenfalls. Fehlt einem behaltenen Paket eine reguläre Abhängigkeit, bricht der Build ab, statt ein unvollständiges Image zu bauen.
+Alles andere fällt weg: die `node_modules` der Oberflächen in den Apps ganz, aus jedem übrigen `node_modules` alle nicht behaltenen Pakete und jeder Eintrag mit Punkt am Anfang, also `.bin`, Caches wie `.cache` und Build-Ausgaben wie `.vite`. Ein verschachteltes `node_modules`, aus dem etwas behalten wird, etwa unter `<app>/realtime`, wird gekürzt statt gelöscht. Links namens `node_modules`, die danach ins Leere zeigen, entfernt der Schritt ebenfalls, etwa `apps/hrms/hrms/public/node_modules`, auf den `sites/assets/hrms` verweist.
+
+Der Schritt bricht den Build ab, statt ein unvollständiges Image zu bauen, wenn einem behaltenen Paket eine reguläre Abhängigkeit fehlt oder ein behaltenes Paket danach nicht mehr da ist. Er folgt keinem Link aus der Bench hinaus: Ist eine App oder ihr `node_modules` ein Link, bricht er ab, und das `node_modules` eines behaltenen Pakets bleibt unberührt, wenn eines von beiden ein Link ist. Abhängigkeiten eines Pakets, das selbst ein Link ist (etwa `link:` bei yarn), sucht er vom Link aus, nicht vom Ziel aus wie Node.js; keine der Apps im Image nutzt das.
 
 Was dadurch nicht mehr geht:
 
 - **`bench build` im Container.** Neue Assets brauchen ohnehin ein neues Image, denn auch eine neue App kommt über `apps.json` und einen neuen Build.
 - **Bundles von Frappe Studio.** Veröffentlicht man eine App aus Frappe Studio, baut Frappe ihr Bundle mit yarn und vite aus `frappe/studio/frontend`; diese Pakete fehlen, und der Build der Studio-App scheitert mit einem Eintrag im Fehlerprotokoll. Der Lauf nach `bench migrate` baut nur bereits veröffentlichte Studio-Apps neu und meldet Fehler nur.
+- **Bibliotheken unter `/assets/<app>/node_modules`, die nirgends wörtlich stehen.** Behalten wird nur, was die Assets oder Quellen einer App als Pfad nennen. Setzt eigener Code den Pfad erst zur Laufzeit zusammen oder steht er nur in der Datenbank, etwa in einem Client Script, einer Web Page oder einem Print Format, antwortet nginx darauf mit 404.
 
-Der Site-Test startet den Socket.IO-Server und ruft über nginx jede Bibliothek ab, die die gebauten Assets unter `node_modules` nennen.
+Der Site-Test startet den Socket.IO-Server, lädt jede `realtime/handlers.js` der Apps, ruft über nginx jede Bibliothek ab, die die gebauten Assets unter `node_modules` nennen, und speichert ein eigenes Website Theme.
 
 ## Woher das Deutsche kommt
 
