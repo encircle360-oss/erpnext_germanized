@@ -8,6 +8,12 @@ Alle nennenswerten Änderungen an erpnext_germanized stehen in dieser Datei. Das
 
 - Der Job „Build, test and publish“ baut das Image nur noch einmal und schiebt es im selben Build per Digest ohne Tag in die Registry; die Tags bekommt der Digest erst nach dem Site-Test und einer Prüfung, dass er das getestete Image ist. Bisher baute der Push ein zweites Mal und konnte dabei Schichten eines gleichzeitigen Release-Laufs aus dem gemeinsamen Cache nehmen; die Prüfung schlug dann erst fehl, als die Tags schon gesetzt waren.
 
+## [16.60.0-13] - 2026-11-24
+
+### Geändert
+
+- Steuerbote v0.11.0: Einrichtung füllt leere Zuordnungen mit den Vorgaben, „Vorgaben aktualisieren“ vermerkt nur mit ausdrücklicher Entscheidung, Beschreibungen und Dokumentation auf dem Stand aller Module.
+
 ## [16.60.0-12] - 2026-11-24
 
 ### Geändert

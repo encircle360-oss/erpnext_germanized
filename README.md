@@ -2,7 +2,7 @@
 
 ERPNext für deutsche Unternehmen als fertiges Container-Image: Frappe, ERPNext und HRMS mit den deutschen Apps von ALYF und Steuerbote in einem versionierten Image für die GitHub Container Registry.
 
-> **Status: erstes Release, frühes Stadium.** Das Image `ghcr.io/encircle360-oss/erpnext_germanized:16.60.0-12` enthält alle Apps aus der Tabelle unten und besteht den Site-Test der CI. Es ist für Tests und erste Installationen gedacht; Rückmeldungen über Issues, Discussions oder Matrix sind willkommen, siehe [Roadmap](docs/roadmap.md).
+> **Status: erstes Release, frühes Stadium.** Das Image `ghcr.io/encircle360-oss/erpnext_germanized:16.60.0-13` enthält alle Apps aus der Tabelle unten und besteht den Site-Test der CI. Es ist für Tests und erste Installationen gedacht; Rückmeldungen über Issues, Discussions oder Matrix sind willkommen, siehe [Roadmap](docs/roadmap.md).
 
 Steuermeldungen an ELSTER übernimmt die enthaltene App [Steuerbote](https://github.com/encircle360-oss/steuerbote), zuerst die Umsatzsteuer-Voranmeldung. Steuerbote verweist in seinem README umgekehrt auf dieses Image.
 
@@ -30,7 +30,7 @@ Frappe ist das Framework unter allen Apps. Die Apps stehen in der Reihenfolge vo
 | [eu_einvoice](https://github.com/alyf-de/eu_einvoice) | v16.4.0 | Erstellt und liest E-Rechnungen im Format UN/CEFACT CII in den Profilen BASIC, EN 16931, EXTENDED und XRECHNUNG, außer bei XRECHNUNG auch eingebettet in ein PDF (ZUGFeRD, Factur-X). | GPL-3.0-or-later |
 | [erpnext_pdf-on-submit](https://github.com/alyf-de/erpnext_pdf-on-submit) | v16.3.1 | Erzeugt beim Buchen eines Belegs ein PDF und hängt es an den Beleg. | GPL-3.0-or-later |
 | [banking](https://github.com/alyf-de/banking) | v16.7.0 | Holt Bankumsätze per EBICS in ERPNext und gleicht sie mit Belegen ab, wobei EBICS ein Abonnement bei ALYF braucht und der Abgleich nicht. | GPL-3.0 |
-| [steuerbote](https://github.com/encircle360-oss/steuerbote) | v0.10.0 | Steuermeldungen aus ERPNext an ELSTER, zuerst die Umsatzsteuer-Voranmeldung, noch in Entwicklung und nicht einsatzfähig. | AGPL-3.0-or-later |
+| [steuerbote](https://github.com/encircle360-oss/steuerbote) | v0.11.0 | Steuermeldungen aus ERPNext an ELSTER, zuerst die Umsatzsteuer-Voranmeldung, noch in Entwicklung und nicht einsatzfähig. | AGPL-3.0-or-later |
 
 Was jede App mitbringt und wo sie eingerichtet wird, steht in [Apps](docs/apps.md).
 
