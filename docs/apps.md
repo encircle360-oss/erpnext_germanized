@@ -166,6 +166,8 @@ Installieren und entfernen: Wer CRM will, nimmt `--install-app crm` nach `insigh
 docker compose exec backend bench --site <site> install-app crm
 ```
 
+Meldet bench dabei „App crm not in apps.txt“, fehlt die App in der Liste im Volume `sites`, siehe [Updates](betrieb.md#updates).
+
 Entfernen geht mit `bench --site <site> uninstall-app crm`. Das löscht alle Daten von CRM auf der Site, also vorher sichern, siehe [Sicherungen](betrieb.md#sicherungen).
 
 ## Briefbote
