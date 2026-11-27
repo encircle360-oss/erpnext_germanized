@@ -4,6 +4,10 @@ Alle nennenswerten Änderungen an erpnext_germanized stehen in dieser Datei. Das
 
 ## Unveröffentlicht
 
+### Behoben
+
+- Dokumentation: [Betrieb](docs/betrieb.md#updates) sagt, dass `bench install-app` eine neue App aus dem Image nur nimmt, wenn sie in `sites/apps.txt` im Volume `sites` steht, wer die Datei schreibt und was zu tun ist, wo der Job `jobs.configure` des Helm-Charts abgeschaltet ist. Das betrifft Sites, die Insights oder CRM nach dem Update auf 16.61.0-7 installieren.
+
 ## [16.61.0-7] - 2026-11-27
 
 ### Hinzugefügt
